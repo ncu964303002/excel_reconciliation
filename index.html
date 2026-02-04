@@ -3,9 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Excel 資料比對工具 - 專業的多檔案資料勾稽比對系統">
     <title>Excel 資料比對工具</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 使用 CDN 但加入備援機制 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" 
+            onerror="alert('無法載入 Excel 處理函式庫，請確認網路連線')"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" 
+            onerror="console.warn('圖表函式庫載入失敗，圖表功能將無法使用')"></script>
+    
     <style>
         * {
             margin: 0;
@@ -140,16 +146,12 @@
         }
 
         .file-config {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-top: 15px;
             padding-top: 15px;
             border-top: 1px solid #e0e0e0;
         }
 
         .form-group {
-            margin-bottom: 0;
+            margin-bottom: 15px;
         }
 
         .form-group label {
@@ -160,8 +162,7 @@
             margin-bottom: 8px;
         }
 
-        .form-group input,
-        .form-group select {
+        .form-group input[type="text"] {
             width: 100%;
             padding: 10px;
             border: 1px solid #ddd;
@@ -170,42 +171,45 @@
             transition: border-color 0.3s;
         }
 
-        .form-group input:focus,
-        .form-group select:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #667eea;
         }
 
-        .amount-section {
-            grid-column: 1 / -1;
+        .key-selector {
             background: #f8f9fa;
-            padding: 15px;
+            border: 1px solid #e0e0e0;
             border-radius: 6px;
-            margin-top: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
         }
 
-        .amount-toggle {
+        .key-item {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 15px;
+            padding: 8px;
+            margin-bottom: 5px;
+            background: white;
+            border-radius: 4px;
             cursor: pointer;
-            user-select: none;
+            transition: all 0.2s;
         }
 
-        .amount-toggle input[type="checkbox"] {
-            width: auto;
+        .key-item:hover {
+            background: #e3f2fd;
+        }
+
+        .key-item input[type="checkbox"] {
             cursor: pointer;
         }
 
-        .amount-fields {
-            display: none;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 15px;
-        }
-
-        .amount-fields.show {
-            display: grid;
+        .key-item label {
+            flex: 1;
+            cursor: pointer;
+            margin: 0;
+            font-weight: normal;
         }
 
         .helper-text {
@@ -279,6 +283,115 @@
             display: block;
         }
 
+        .primary-selector select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .columns-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .columns-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .columns-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .select-all-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-select-all {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-deselect-all {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-small:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .file-columns-group {
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .file-columns-group:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .file-columns-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .columns-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .column-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .column-item:hover {
+            background: #e3f2fd;
+        }
+
+        .column-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .column-item label {
+            flex: 1;
+            cursor: pointer;
+            margin: 0;
+            font-size: 13px;
+        }
+
         .btn {
             padding: 12px 24px;
             border: none;
@@ -300,6 +413,15 @@
             width: 100%;
             padding: 16px;
             font-size: 16px;
+        }
+
+        .btn-clear {
+            background: #ffc107;
+            color: #333;
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            margin-top: 15px;
         }
 
         .btn-remove {
@@ -443,14 +565,6 @@
             font-size: 11px;
         }
 
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
         .data-table {
             width: 100%;
             border-collapse: collapse;
@@ -481,16 +595,16 @@
             background: #fff3cd !important;
         }
 
-        .highlight-error {
-            background: #f8d7da !important;
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 12px;
+            border-top: 1px solid #e0e0e0;
         }
 
         @media (max-width: 968px) {
-            .file-config {
-                grid-template-columns: 1fr;
-            }
-
-            .amount-fields {
+            .columns-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -557,12 +671,35 @@
                     </div>
                     <div class="primary-selector" id="primarySelector">
                         <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">主要檔案</label>
-                        <select id="primaryFile" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px;"></select>
+                        <select id="primaryFile"></select>
                     </div>
                 </div>
+            </div>
 
-                <button class="btn btn-primary" onclick="performAnalysis()" style="margin-top: 20px;">
+            <!-- 產出欄位選擇 -->
+            <div class="section" id="outputSection" style="display: none;">
+                <div class="section-title">
+                    <span class="step-number">3</span>
+                    產出新 Excel 的欄位
+                </div>
+                
+                <div class="columns-section">
+                    <div class="columns-header">
+                        <h3>選擇要包含在結果中的欄位</h3>
+                        <div class="select-all-btns">
+                            <button class="btn-small btn-select-all" onclick="selectAllColumns()">全選</button>
+                            <button class="btn-small btn-deselect-all" onclick="deselectAllColumns()">取消全選</button>
+                        </div>
+                    </div>
+                    <div id="columnsContainer"></div>
+                </div>
+
+                <button class="btn btn-primary" onclick="performAnalysis()">
                     開始比對
+                </button>
+
+                <button class="btn btn-clear" onclick="clearAll()">
+                    🔄 清除，比較下一筆
                 </button>
             </div>
 
@@ -604,12 +741,18 @@
                 </div>
             </div>
         </div>
+
+        <div class="footer">
+            Excel 資料比對工具 v1.0 | 所有資料處理均在本地瀏覽器進行，不會上傳至伺服器
+        </div>
     </div>
 
     <script>
+        // 全域變數
         let uploadedFiles = [];
         let filesData = [];
         let analysisResults = null;
+        let chartInstances = [];
 
         // 上傳處理
         const uploadArea = document.getElementById('uploadArea');
@@ -628,28 +771,40 @@
         async function handleFiles(files) {
             for (let file of files) {
                 if (file.name.match(/\.(xlsx|xls)$/)) {
-                    const data = await readExcel(file);
-                    uploadedFiles.push(file);
-                    filesData.push(data);
+                    try {
+                        const data = await readExcel(file);
+                        uploadedFiles.push(file);
+                        filesData.push(data);
+                    } catch (error) {
+                        console.error('讀取檔案失敗:', error);
+                        alert(`讀取檔案 ${file.name} 失敗，請確認檔案格式是否正確`);
+                    }
                 }
             }
             displayFiles();
             if (uploadedFiles.length >= 2) {
                 document.getElementById('configSection').style.display = 'block';
+                document.getElementById('outputSection').style.display = 'block';
                 updatePrimarySelector();
+                displayColumnsSelector();
             }
         }
 
         function readExcel(file) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = (e) => {
-                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                    const ws = wb.Sheets[wb.SheetNames[0]];
-                    const data = XLSX.utils.sheet_to_json(ws);
-                    const columns = data.length > 0 ? Object.keys(data[0]) : [];
-                    resolve({ data, columns, sheetName: wb.SheetNames[0] });
+                    try {
+                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const data = XLSX.utils.sheet_to_json(ws);
+                        const columns = data.length > 0 ? Object.keys(data[0]) : [];
+                        resolve({ data, columns, sheetName: wb.SheetNames[0] });
+                    } catch (error) {
+                        reject(error);
+                    }
                 };
+                reader.onerror = reject;
                 reader.readAsArrayBuffer(file);
             });
         }
@@ -671,53 +826,29 @@
                         <div class="form-group">
                             <label>檔案標籤</label>
                             <input type="text" id="label_${i}" placeholder="檔案 ${i + 1}" value="檔案 ${i + 1}">
-                        </div>
-                        <div class="form-group">
-                            <label>Key 欄位</label>
-                            <select id="key_${i}">
-                                <option value="">-- 選擇 --</option>
-                                ${filesData[i].columns.map(col => `<option value="${col}">${col}</option>`).join('')}
-                            </select>
+                            <div class="helper-text">用於識別檔案的自訂名稱</div>
                         </div>
                         
-                        <div class="amount-section">
-                            <div class="amount-toggle" onclick="toggleAmount(${i})">
-                                <input type="checkbox" id="enableAmount_${i}" onclick="event.stopPropagation()">
-                                <label style="cursor: pointer; font-weight: 600; margin: 0;">數值欄位比對</label>
+                        <div class="form-group">
+                            <label>Key 欄位（可複選）</label>
+                            <div class="key-selector" id="keySelector_${i}">
+                                ${filesData[i].columns.map(col => `
+                                    <div class="key-item" onclick="toggleKeyCheckbox(${i}, '${col.replace(/'/g, "\\'")}')">
+                                        <input type="checkbox" id="key_${i}_${col}" value="${col}" onclick="event.stopPropagation()">
+                                        <label for="key_${i}_${col}">${col}</label>
+                                    </div>
+                                `).join('')}
                             </div>
-                            <div class="amount-fields" id="amountFields_${i}">
-                                <div class="form-group">
-                                    <label>數值欄位</label>
-                                    <select id="amount_${i}">
-                                        <option value="">-- 選擇 --</option>
-                                        ${filesData[i].columns.map(col => `<option value="${col}">${col}</option>`).join('')}
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>欄位說明</label>
-                                    <input type="text" id="amountLabel_${i}" placeholder="選填">
-                                </div>
-                                <div class="form-group">
-                                    <label>容差值</label>
-                                    <input type="number" id="tolerance_${i}" value="0.01" step="0.01" min="0">
-                                </div>
-                            </div>
+                            <div class="helper-text">選擇用於比對的關鍵欄位，可選擇多個欄位組成複合 Key</div>
                         </div>
                     </div>
                 </div>
             `).join('');
         }
 
-        function toggleAmount(index) {
-            const checkbox = document.getElementById(`enableAmount_${index}`);
-            const fields = document.getElementById(`amountFields_${index}`);
-            
+        function toggleKeyCheckbox(fileIndex, colName) {
+            const checkbox = document.getElementById(`key_${fileIndex}_${colName}`);
             checkbox.checked = !checkbox.checked;
-            if (checkbox.checked) {
-                fields.classList.add('show');
-            } else {
-                fields.classList.remove('show');
-            }
         }
 
         function removeFile(index) {
@@ -726,9 +857,11 @@
             displayFiles();
             if (uploadedFiles.length < 2) {
                 document.getElementById('configSection').style.display = 'none';
+                document.getElementById('outputSection').style.display = 'none';
                 document.getElementById('resultSection').style.display = 'none';
             } else {
                 updatePrimarySelector();
+                displayColumnsSelector();
             }
         }
 
@@ -752,97 +885,149 @@
             }).join('');
         }
 
+        function displayColumnsSelector() {
+            const container = document.getElementById('columnsContainer');
+            
+            let html = '';
+            uploadedFiles.forEach((file, fileIndex) => {
+                const label = document.getElementById(`label_${fileIndex}`)?.value || `檔案 ${fileIndex + 1}`;
+                
+                html += `
+                    <div class="file-columns-group">
+                        <div class="file-columns-title">${label} - ${file.name}</div>
+                        <div class="columns-grid">
+                            ${filesData[fileIndex].columns.map(col => `
+                                <div class="column-item" onclick="toggleColumnCheckbox(${fileIndex}, '${col.replace(/'/g, "\\'")}')">
+                                    <input type="checkbox" id="col_${fileIndex}_${col}" value="${col}" checked onclick="event.stopPropagation()">
+                                    <label for="col_${fileIndex}_${col}">${col}</label>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+            
+            container.innerHTML = html;
+        }
+
+        function toggleColumnCheckbox(fileIndex, colName) {
+            const checkbox = document.getElementById(`col_${fileIndex}_${colName}`);
+            checkbox.checked = !checkbox.checked;
+        }
+
+        function selectAllColumns() {
+            document.querySelectorAll('#columnsContainer input[type="checkbox"]').forEach(cb => {
+                cb.checked = true;
+            });
+        }
+
+        function deselectAllColumns() {
+            document.querySelectorAll('#columnsContainer input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+        }
+
+        function clearAll() {
+            if (confirm('確定要清除所有資料並重新開始嗎？')) {
+                uploadedFiles = [];
+                filesData = [];
+                analysisResults = null;
+                
+                chartInstances.forEach(chart => chart.destroy());
+                chartInstances = [];
+                
+                document.getElementById('uploadedFiles').innerHTML = '';
+                document.getElementById('configSection').style.display = 'none';
+                document.getElementById('outputSection').style.display = 'none';
+                document.getElementById('resultSection').style.display = 'none';
+                
+                fileInput.value = '';
+            }
+        }
+
         function performAnalysis() {
-            // 獲取設定
             const config = [];
             for (let i = 0; i < uploadedFiles.length; i++) {
                 const label = document.getElementById(`label_${i}`).value || `檔案 ${i + 1}`;
-                const key = document.getElementById(`key_${i}`).value;
                 
-                if (!key) {
-                    alert(`請為「${label}」選擇 Key 欄位`);
+                const keys = [];
+                filesData[i].columns.forEach(col => {
+                    const checkbox = document.getElementById(`key_${i}_${col}`);
+                    if (checkbox && checkbox.checked) {
+                        keys.push(col);
+                    }
+                });
+                
+                if (keys.length === 0) {
+                    alert(`請為「${label}」至少選擇一個 Key 欄位`);
                     return;
                 }
 
-                const enableAmount = document.getElementById(`enableAmount_${i}`).checked;
-                const amount = enableAmount ? document.getElementById(`amount_${i}`).value : '';
-                const amountLabel = document.getElementById(`amountLabel_${i}`).value || '';
-                const tolerance = enableAmount ? parseFloat(document.getElementById(`tolerance_${i}`).value) : 0;
+                const outputColumns = [];
+                filesData[i].columns.forEach(col => {
+                    const checkbox = document.getElementById(`col_${i}_${col}`);
+                    if (checkbox && checkbox.checked) {
+                        outputColumns.push(col);
+                    }
+                });
 
-                config.push({ label, key, amount, amountLabel, tolerance });
+                config.push({ label, keys, outputColumns });
             }
 
             const mode = document.querySelector('input[name="mode"]:checked').value;
             const primaryIndex = mode === 'primary' ? parseInt(document.getElementById('primaryFile').value) : null;
 
-            // 收集所有 Key
             const allKeysMap = new Map();
             filesData.forEach((fileData, fileIndex) => {
                 fileData.data.forEach(row => {
-                    const keyValue = String(row[config[fileIndex].key] || '').trim();
-                    if (keyValue) {
-                        if (!allKeysMap.has(keyValue)) {
-                            allKeysMap.set(keyValue, []);
+                    const keyValues = config[fileIndex].keys.map(k => String(row[k] || '').trim());
+                    const compositeKey = keyValues.join('|');
+                    
+                    if (compositeKey && !keyValues.every(v => v === '')) {
+                        if (!allKeysMap.has(compositeKey)) {
+                            allKeysMap.set(compositeKey, { keyValues, fileIndices: [] });
                         }
-                        allKeysMap.get(keyValue).push(fileIndex);
+                        allKeysMap.get(compositeKey).fileIndices.push(fileIndex);
                     }
                 });
             });
 
-            // 根據模式篩選
             let targetKeys = [];
             if (mode === 'union') {
                 targetKeys = Array.from(allKeysMap.keys());
             } else if (mode === 'intersection') {
-                allKeysMap.forEach((indices, key) => {
-                    const uniqueIndices = [...new Set(indices)];
+                allKeysMap.forEach((value, key) => {
+                    const uniqueIndices = [...new Set(value.fileIndices)];
                     if (uniqueIndices.length === uploadedFiles.length) {
                         targetKeys.push(key);
                     }
                 });
             } else if (mode === 'primary') {
                 filesData[primaryIndex].data.forEach(row => {
-                    const keyValue = String(row[config[primaryIndex].key] || '').trim();
-                    if (keyValue && !targetKeys.includes(keyValue)) {
-                        targetKeys.push(keyValue);
+                    const keyValues = config[primaryIndex].keys.map(k => String(row[k] || '').trim());
+                    const compositeKey = keyValues.join('|');
+                    if (compositeKey && !keyValues.every(v => v === '') && !targetKeys.includes(compositeKey)) {
+                        targetKeys.push(compositeKey);
                     }
                 });
             }
 
-            // 分析每個 Key
             const results = [];
-            targetKeys.forEach(keyValue => {
+            targetKeys.forEach(compositeKey => {
+                const keyInfo = allKeysMap.get(compositeKey);
+                
                 const rowData = filesData.map((fileData, i) => {
-                    return fileData.data.find(r => String(r[config[i].key] || '').trim() === keyValue) || null;
+                    return fileData.data.find(r => {
+                        const keyValues = config[i].keys.map(k => String(r[k] || '').trim());
+                        return keyValues.join('|') === compositeKey;
+                    }) || null;
                 });
 
                 const existCount = rowData.filter(r => r !== null).length;
                 let category;
 
                 if (existCount === filesData.length) {
-                    // 都存在 - 檢查數值
-                    const hasAmountCompare = config.some(c => c.amount);
-                    if (hasAmountCompare) {
-                        let hasDiff = false;
-                        for (let i = 0; i < config.length - 1; i++) {
-                            for (let j = i + 1; j < config.length; j++) {
-                                if (config[i].amount && config[j].amount && rowData[i] && rowData[j]) {
-                                    const amt1 = parseFloat(rowData[i][config[i].amount]) || 0;
-                                    const amt2 = parseFloat(rowData[j][config[j].amount]) || 0;
-                                    const diff = Math.abs(amt1 - amt2);
-                                    const maxTolerance = Math.max(config[i].tolerance, config[j].tolerance);
-                                    if (diff > maxTolerance) {
-                                        hasDiff = true;
-                                        break;
-                                    }
-                                }
-                            }
-                            if (hasDiff) break;
-                        }
-                        category = hasDiff ? 'value_diff' : 'match';
-                    } else {
-                        category = 'match';
-                    }
+                    category = 'match';
                 } else if (existCount === 1) {
                     const onlyInIndex = rowData.findIndex(r => r !== null);
                     category = `only_${onlyInIndex}`;
@@ -850,14 +1035,13 @@
                     category = 'partial';
                 }
 
-                const amounts = config.map((cfg, i) => {
-                    if (cfg.amount && rowData[i]) {
-                        return parseFloat(rowData[i][cfg.amount]) || 0;
-                    }
-                    return null;
+                results.push({ 
+                    compositeKey, 
+                    keyValues: keyInfo.keyValues,
+                    rowData, 
+                    category, 
+                    existCount 
                 });
-
-                results.push({ keyValue, rowData, category, existCount, amounts });
             });
 
             analysisResults = { results, config, mode, primaryIndex };
@@ -867,11 +1051,9 @@
         function displayResults() {
             const { results, config } = analysisResults;
 
-            // 統計
             const stats = {
                 total: results.length,
                 match: results.filter(r => r.category === 'match').length,
-                value_diff: results.filter(r => r.category === 'value_diff').length,
                 partial: results.filter(r => r.category === 'partial').length
             };
 
@@ -879,7 +1061,6 @@
                 stats[`only_${i}`] = results.filter(r => r.category === `only_${i}`).length;
             });
 
-            // 統計卡片
             const statsGrid = document.getElementById('statsGrid');
             let statsHtml = `
                 <div class="stat-card">
@@ -904,15 +1085,6 @@
                 }
             });
 
-            if (stats.value_diff > 0) {
-                statsHtml += `
-                    <div class="stat-card">
-                        <div class="stat-number" style="color: #fbbf24;">${stats.value_diff}</div>
-                        <div class="stat-label">數值差異</div>
-                    </div>
-                `;
-            }
-
             if (stats.partial > 0) {
                 statsHtml += `
                     <div class="stat-card">
@@ -924,7 +1096,6 @@
 
             statsGrid.innerHTML = statsHtml;
 
-            // 摘要
             const summaryBox = document.getElementById('summaryBox');
             const matchRate = stats.total > 0 ? ((stats.match / stats.total) * 100).toFixed(1) : 0;
             
@@ -948,10 +1119,7 @@
 
             summaryBox.innerHTML = summaryHtml;
 
-            // 圖表
             drawCharts(stats, config, results);
-
-            // 分頁
             generateTabs(stats, config);
 
             document.getElementById('resultSection').style.display = 'block';
@@ -959,7 +1127,14 @@
         }
 
         function drawCharts(stats, config, results) {
-            // 圓餅圖
+            chartInstances.forEach(chart => chart.destroy());
+            chartInstances = [];
+
+            if (typeof Chart === 'undefined') {
+                console.warn('Chart.js 未載入，跳過圖表繪製');
+                return;
+            }
+
             const ctx1 = document.getElementById('pieChart').getContext('2d');
             const labels = [];
             const data = [];
@@ -980,32 +1155,26 @@
                 }
             });
 
-            if (stats.value_diff > 0) {
-                labels.push('數值差異');
-                data.push(stats.value_diff);
-                colors.push('#fbbf24');
-            }
-
             if (stats.partial > 0) {
                 labels.push('部分缺失');
                 data.push(stats.partial);
                 colors.push('#94a3b8');
             }
 
-            new Chart(ctx1, {
+            const pieChart = new Chart(ctx1, {
                 type: 'pie',
                 data: { labels, datasets: [{ data, backgroundColor: colors }] },
                 options: { responsive: true, maintainAspectRatio: true }
             });
+            chartInstances.push(pieChart);
 
-            // 長條圖
             const ctx2 = document.getElementById('barChart').getContext('2d');
             const coverage = uploadedFiles.map((_, i) => {
                 const count = results.filter(r => r.rowData[i] !== null).length;
                 return stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : 0;
             });
 
-            new Chart(ctx2, {
+            const barChart = new Chart(ctx2, {
                 type: 'bar',
                 data: {
                     labels: config.map(c => c.label),
@@ -1021,6 +1190,7 @@
                     scales: { y: { beginAtZero: true, max: 100 } }
                 }
             });
+            chartInstances.push(barChart);
         }
 
         function generateTabs(stats, config) {
@@ -1051,14 +1221,6 @@
                 }
             });
 
-            if (stats.value_diff > 0) {
-                tabsHtml += `
-                    <button class="tab" onclick="switchTab('value_diff', event)">
-                        數值差異 <span class="tab-badge">${stats.value_diff}</span>
-                    </button>
-                `;
-            }
-
             if (stats.partial > 0) {
                 tabsHtml += `
                     <button class="tab" onclick="switchTab('partial', event)">
@@ -1088,40 +1250,36 @@
             }
 
             let tableHtml = '<table class="data-table"><thead><tr>';
-            tableHtml += '<th>Key 值</th>';
             
-            config.forEach(cfg => {
-                tableHtml += `<th>${cfg.label}</th>`;
-            });
-
-            const hasAmount = config.some(c => c.amount);
-            if (hasAmount) {
-                config.forEach(cfg => {
-                    if (cfg.amount) {
-                        tableHtml += `<th>${cfg.amountLabel || cfg.amount}</th>`;
-                    }
-                });
+            const maxKeyCount = Math.max(...config.map(c => c.keys.length));
+            for (let i = 0; i < maxKeyCount; i++) {
+                tableHtml += `<th>Key ${i + 1}</th>`;
             }
+            
+            config.forEach((cfg, fileIndex) => {
+                cfg.outputColumns.forEach(col => {
+                    tableHtml += `<th>${cfg.label}_${col}</th>`;
+                });
+            });
 
             tableHtml += '</tr></thead><tbody>';
 
             filtered.forEach(row => {
                 const rowClass = row.category.startsWith('only_') ? 'highlight-warning' : '';
                 tableHtml += `<tr class="${rowClass}">`;
-                tableHtml += `<td><strong>${row.keyValue}</strong></td>`;
                 
-                row.rowData.forEach((data) => {
-                    tableHtml += data ? `<td>✓</td>` : `<td style="color: #999;">✗</td>`;
-                });
-
-                if (hasAmount) {
-                    row.amounts.forEach((amt, i) => {
-                        if (config[i].amount) {
-                            const value = amt !== null ? amt.toLocaleString() : '-';
-                            tableHtml += `<td>${value}</td>`;
-                        }
-                    });
+                for (let i = 0; i < maxKeyCount; i++) {
+                    const keyValue = row.keyValues[i] || '-';
+                    tableHtml += `<td><strong>${keyValue}</strong></td>`;
                 }
+                
+                config.forEach((cfg, fileIndex) => {
+                    cfg.outputColumns.forEach(col => {
+                        const data = row.rowData[fileIndex];
+                        const value = data && data[col] !== undefined ? data[col] : '-';
+                        tableHtml += `<td>${value}</td>`;
+                    });
+                });
 
                 tableHtml += '</tr>';
             });
@@ -1136,7 +1294,6 @@
             const { results, config } = analysisResults;
             const wb = XLSX.utils.book_new();
 
-            // 摘要
             const summary = [
                 ['資料比對報告'],
                 ['產生時間', new Date().toLocaleString('zh-TW')],
@@ -1146,23 +1303,27 @@
 
             config.forEach((cfg, i) => {
                 summary.push([`檔案 ${i + 1}`, cfg.label, uploadedFiles[i].name]);
+                summary.push(['Key 欄位', cfg.keys.join(', ')]);
             });
 
             summary.push([''], ['統計'], ['總筆數', results.length]);
 
             XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), '摘要');
 
-            // 詳細資料
             const detailData = results.map(row => {
-                const obj = { 'Key': row.keyValue };
-                config.forEach((cfg, i) => {
-                    obj[cfg.label] = row.rowData[i] ? '✓' : '✗';
+                const obj = {};
+                
+                row.keyValues.forEach((keyVal, i) => {
+                    obj[`Key_${i + 1}`] = keyVal;
                 });
-                config.forEach((cfg, i) => {
-                    if (cfg.amount && row.amounts[i] !== null) {
-                        obj[`${cfg.label}_${cfg.amountLabel || cfg.amount}`] = row.amounts[i];
-                    }
+                
+                config.forEach((cfg, fileIndex) => {
+                    cfg.outputColumns.forEach(col => {
+                        const data = row.rowData[fileIndex];
+                        obj[`${cfg.label}_${col}`] = data && data[col] !== undefined ? data[col] : '';
+                    });
                 });
+                
                 return obj;
             });
 
