@@ -1,1336 +1,573 @@
 <!DOCTYPE html>
+
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Excel 資料比對工具 - 專業的多檔案資料勾稽比對系統">
-    <title>Excel 資料比對工具</title>
-    
-    <!-- 使用 CDN 但加入備援機制 -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" 
-            onerror="alert('無法載入 Excel 處理函式庫，請確認網路連線')"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" 
-            onerror="console.warn('圖表函式庫載入失敗，圖表功能將無法使用')"></script>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .header h1 {
-            font-size: 28px;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .content {
-            padding: 30px;
-        }
-
-        .section {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 25px;
-        }
-
-        .section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .step-number {
-            background: #667eea;
-            color: white;
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
-        .upload-area {
-            border: 2px dashed #667eea;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            background: white;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .upload-area:hover {
-            background: #f0f4ff;
-            border-color: #764ba2;
-        }
-
-        .upload-icon {
-            font-size: 48px;
-            color: #667eea;
-            margin-bottom: 15px;
-        }
-
-        .file-item {
-            background: white;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 15px;
-            transition: all 0.3s;
-        }
-
-        .file-item:hover {
-            border-color: #667eea;
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
-        }
-
-        .file-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 15px;
-        }
-
-        .file-info {
-            flex: 1;
-        }
-
-        .file-name {
-            font-weight: 600;
-            font-size: 15px;
-            color: #333;
-            margin-bottom: 5px;
-        }
-
-        .file-stats {
-            font-size: 12px;
-            color: #666;
-        }
-
-        .file-config {
-            padding-top: 15px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #555;
-            margin-bottom: 8px;
-        }
-
-        .form-group input[type="text"] {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .key-selector {
-            background: #f8f9fa;
-            border: 1px solid #e0e0e0;
-            border-radius: 6px;
-            padding: 15px;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        .key-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px;
-            margin-bottom: 5px;
-            background: white;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .key-item:hover {
-            background: #e3f2fd;
-        }
-
-        .key-item input[type="checkbox"] {
-            cursor: pointer;
-        }
-
-        .key-item label {
-            flex: 1;
-            cursor: pointer;
-            margin: 0;
-            font-weight: normal;
-        }
-
-        .helper-text {
-            font-size: 11px;
-            color: #999;
-            margin-top: 5px;
-        }
-
-        .comparison-mode {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-        }
-
-        .mode-title {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-        }
-
-        .mode-options {
-            display: grid;
-            gap: 10px;
-        }
-
-        .mode-option {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 12px 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .mode-option:hover {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .mode-option.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
-        }
-
-        .mode-option input[type="radio"] {
-            cursor: pointer;
-        }
-
-        .mode-label {
-            flex: 1;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .mode-desc {
-            font-size: 12px;
-            color: #666;
-            margin-top: 3px;
-        }
-
-        .primary-selector {
-            margin-top: 15px;
-            display: none;
-        }
-
-        .primary-selector.show {
-            display: block;
-        }
-
-        .primary-selector select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .columns-section {
-            background: white;
-            border-radius: 8px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .columns-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .columns-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
-        }
-
-        .select-all-btns {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn-select-all {
-            background: #28a745;
-            color: white;
-        }
-
-        .btn-deselect-all {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-small:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-        }
-
-        .file-columns-group {
-            margin-bottom: 20px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .file-columns-group:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .file-columns-title {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .columns-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 8px;
-        }
-
-        .column-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .column-item:hover {
-            background: #e3f2fd;
-        }
-
-        .column-item input[type="checkbox"] {
-            cursor: pointer;
-        }
-
-        .column-item label {
-            flex: 1;
-            cursor: pointer;
-            margin: 0;
-            font-size: 13px;
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-        }
-
-        .btn-clear {
-            background: #ffc107;
-            color: #333;
-            width: 100%;
-            padding: 16px;
-            font-size: 16px;
-            margin-top: 15px;
-        }
-
-        .btn-remove {
-            background: #dc3545;
-            color: white;
-            padding: 8px 16px;
-            font-size: 13px;
-        }
-
-        .btn-export {
-            background: #28a745;
-            color: white;
-        }
-
-        .conclusion-report {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-
-        .report-title {
-            font-size: 22px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            text-align: center;
-            border-bottom: 2px solid rgba(255,255,255,0.3);
-            padding-bottom: 15px;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 10px;
-            padding: 20px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 12px;
-            opacity: 0.9;
-        }
-
-        .summary-box {
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .summary-item:last-child {
-            border-bottom: none;
-        }
-
-        .summary-label {
-            opacity: 0.9;
-        }
-
-        .summary-value {
-            font-weight: 600;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .chart-card {
-            background: white;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
-        .chart-title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .tab {
-            padding: 10px 18px;
-            border: none;
-            background: #e9ecef;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 13px;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tab:hover {
-            background: #dee2e6;
-        }
-
-        .tab.active {
-            background: #667eea;
-            color: white;
-        }
-
-        .tab-badge {
-            background: rgba(255, 255, 255, 0.3);
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 11px;
-        }
-
-        .data-table {
-            width: 100%;
-            border-collapse: collapse;
-            background: white;
-            font-size: 13px;
-        }
-
-        .data-table th,
-        .data-table td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #e0e0e0;
-        }
-
-        .data-table th {
-            background: #f8f9fa;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .data-table tr:hover {
-            background: #f8f9fa;
-        }
-
-        .highlight-warning {
-            background: #fff3cd !important;
-        }
-
-        .footer {
-            text-align: center;
-            padding: 20px;
-            color: #666;
-            font-size: 12px;
-            border-top: 1px solid #e0e0e0;
-        }
-
-        @media (max-width: 968px) {
-            .columns-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Excel 資料比對工具 - 專業的多檔案資料勾稽比對系統">
+<title>Excel 資料比對工具</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Microsoft JhengHei',sans-serif; background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); min-height:100vh; padding:20px; }
+.container { max-width:1600px; margin:0 auto; background:white; border-radius:15px; box-shadow:0 20px 60px rgba(0,0,0,0.3); }
+.header { background:linear-gradient(135deg,#667eea 0%,#764ba2 100%); color:white; padding:30px; text-align:center; border-radius:15px 15px 0 0; }
+.header h1 { font-size:28px; margin-bottom:10px; }
+.content { padding:30px; }
+.section { background:#f8f9fa; border-radius:10px; padding:25px; margin-bottom:25px; }
+.section-title { font-size:18px; font-weight:600; color:#333; margin-bottom:20px; display:flex; align-items:center; gap:10px; }
+.step-number { background:#667eea; color:white; width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; }
+.upload-area { border:2px dashed #667eea; border-radius:10px; padding:40px; text-align:center; background:white; cursor:pointer; transition:all 0.3s; }
+.upload-area:hover { background:#f0f4ff; border-color:#764ba2; }
+.upload-hint { background:#fff3cd; border:1px solid #ffc107; border-radius:8px; padding:12px 20px; margin-top:15px; text-align:left; font-size:14px; color:#856404; }
+.file-item { background:white; border:2px solid #e0e0e0; border-radius:10px; padding:20px; margin-bottom:15px; }
+.file-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; }
+.file-name { font-weight:600; font-size:15px; color:#333; margin-bottom:5px; }
+.file-stats { font-size:12px; color:#666; }
+.file-config { padding-top:15px; border-top:1px solid #e0e0e0; }
+.form-group { margin-bottom:15px; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:#555; margin-bottom:8px; }
+.form-group input, .form-group select { width:100%; padding:10px; border:1px solid #ddd; border-radius:6px; font-size:14px; }
+.key-selector { background:#f8f9fa; border:1px solid #e0e0e0; border-radius:6px; padding:12px; max-height:200px; overflow-y:auto; }
+.key-item { display:flex; align-items:center; gap:6px; padding:5px 8px; margin-bottom:2px; background:white; border-radius:4px; cursor:pointer; user-select:none; }
+.key-item:hover { background:#e3f2fd; }
+.key-item input[type="checkbox"] { margin:0; flex-shrink:0; width:16px; height:16px; }
+.key-item label { margin:0; cursor:pointer; flex:1; text-align:left; font-size:14px; line-height:1.4; padding-left:2px; }
+.key-validation { margin-top:10px; padding:10px; border-radius:6px; font-size:13px; }
+.key-validation.success { background:#d4edda; border:1px solid #c3e6cb; color:#155724; }
+.key-validation.error { background:#f8d7da; border:1px solid #f5c6cb; color:#721c24; }
+.key-display { margin-top:10px; padding:10px; background:#e3f2fd; border:1px solid #2196f3; border-radius:6px; font-size:13px; color:#1565c0; }
+.helper-text { font-size:11px; color:#999; margin-top:5px; }
+.mode-option { background:#f8f9fa; border:2px solid #e0e0e0; border-radius:8px; padding:12px 15px; cursor:pointer; display:flex; gap:10px; margin-bottom:10px; }
+.mode-option.selected { border-color:#667eea; background:#f0f4ff; }
+.columns-section { background:white; border-radius:8px; padding:20px; margin-top:20px; }
+.columns-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:8px; }
+.column-item { display:flex; align-items:center; gap:8px; padding:8px; background:#f8f9fa; border-radius:4px; cursor:pointer; }
+.column-item.is-key { opacity:0.5; cursor:not-allowed; }
+.file-columns-group { margin-bottom:20px; padding:20px; background:#f8f9fa; border-radius:8px; }
+.file-columns-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; }
+.file-columns-title { font-weight:600; color:#667eea; font-size:14px; }
+.btn { padding:12px 24px; border:none; border-radius:6px; cursor:pointer; font-size:14px; font-weight:600; transition:all 0.3s; }
+.btn:hover { transform:translateY(-2px); }
+.btn-primary { background:#667eea; color:white; width:100%; padding:16px; font-size:16px; min-height:54px; }
+.btn-clear { background:#ffc107; color:#333; width:100%; padding:16px; margin-top:15px; min-height:54px; }
+.btn-remove { background:#dc3545; color:white; padding:8px 16px; font-size:13px; }
+.btn-export { background:#28a745; color:white; }
+.btn-small { padding:6px 12px; font-size:12px; }
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th, .data-table td { padding:12px; border:1px solid #e0e0e0; text-align:left; }
+.data-table th { background:#f8f9fa; font-weight:600; }
+.data-table tr { transition:background 0.2s; }
+.footer { text-align:center; padding:20px; color:#666; font-size:12px; border-top:1px solid #e0e0e0; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>📊 Excel 資料比對工具</h1>
-            <p>專業的多檔案資料勾稽比對系統</p>
-        </div>
-
-        <div class="content">
-            <!-- 上傳檔案 -->
-            <div class="section">
-                <div class="section-title">
-                    <span class="step-number">1</span>
-                    上傳檔案
-                </div>
-                <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
-                    <h3>點擊或拖曳檔案到此處</h3>
-                    <p style="color: #666; margin-top: 10px;">支援 .xlsx 和 .xls 格式</p>
-                    <input type="file" id="fileInput" style="display: none;" accept=".xlsx,.xls" multiple>
-                </div>
-                <div id="uploadedFiles" style="margin-top: 20px;"></div>
-            </div>
-
-            <!-- 比對設定 -->
-            <div class="section" id="configSection" style="display: none;">
-                <div class="section-title">
-                    <span class="step-number">2</span>
-                    比對設定
-                </div>
-                
-                <div class="comparison-mode">
-                    <div class="mode-title">比對模式</div>
-                    <div class="mode-options">
-                        <label class="mode-option selected">
-                            <input type="radio" name="mode" value="union" checked onchange="selectMode(this)">
-                            <div>
-                                <div class="mode-label">聯集</div>
-                                <div class="mode-desc">顯示所有檔案中出現的 Key</div>
-                            </div>
-                        </label>
-                        <label class="mode-option">
-                            <input type="radio" name="mode" value="intersection" onchange="selectMode(this)">
-                            <div>
-                                <div class="mode-label">交集</div>
-                                <div class="mode-desc">僅顯示所有檔案共同的 Key</div>
-                            </div>
-                        </label>
-                        <label class="mode-option">
-                            <input type="radio" name="mode" value="primary" onchange="selectMode(this)">
-                            <div>
-                                <div class="mode-label">指定主檔</div>
-                                <div class="mode-desc">以某一檔案為基準進行比對</div>
-                            </div>
-                        </label>
-                    </div>
-                    <div class="primary-selector" id="primarySelector">
-                        <label style="display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px;">主要檔案</label>
-                        <select id="primaryFile"></select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 產出欄位選擇 -->
-            <div class="section" id="outputSection" style="display: none;">
-                <div class="section-title">
-                    <span class="step-number">3</span>
-                    產出新 Excel 的欄位
-                </div>
-                
-                <div class="columns-section">
-                    <div class="columns-header">
-                        <h3>選擇要包含在結果中的欄位</h3>
-                        <div class="select-all-btns">
-                            <button class="btn-small btn-select-all" onclick="selectAllColumns()">全選</button>
-                            <button class="btn-small btn-deselect-all" onclick="deselectAllColumns()">取消全選</button>
-                        </div>
-                    </div>
-                    <div id="columnsContainer"></div>
-                </div>
-
-                <button class="btn btn-primary" onclick="performAnalysis()">
-                    開始比對
-                </button>
-
-                <button class="btn btn-clear" onclick="clearAll()">
-                    🔄 清除，比較下一筆
-                </button>
-            </div>
-
-            <!-- 結果 -->
-            <div id="resultSection" style="display: none;">
-                <div class="conclusion-report">
-                    <div class="report-title">比對結果</div>
-                    
-                    <div class="stats-grid" id="statsGrid"></div>
-
-                    <div class="summary-box" id="summaryBox"></div>
-                </div>
-
-                <!-- 圖表 -->
-                <div class="charts-grid">
-                    <div class="chart-card">
-                        <div class="chart-title">資料分布</div>
-                        <canvas id="pieChart"></canvas>
-                    </div>
-                    <div class="chart-card">
-                        <div class="chart-title">檔案覆蓋率</div>
-                        <canvas id="barChart"></canvas>
-                    </div>
-                </div>
-
-                <!-- 詳細資料 -->
-                <div class="section">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div class="section-title" style="margin: 0;">
-                            詳細資料
-                        </div>
-                        <button class="btn btn-export" onclick="exportResults()">
-                            匯出 Excel
-                        </button>
-                    </div>
-                    
-                    <div class="tabs" id="tabs"></div>
-                    <div id="tabContent" style="max-height: 500px; overflow-y: auto;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="footer">
-            Excel 資料比對工具 v1.0 | 所有資料處理均在本地瀏覽器進行，不會上傳至伺服器
-        </div>
-    </div>
-
-    <script>
-        // 全域變數
-        let uploadedFiles = [];
-        let filesData = [];
-        let analysisResults = null;
-        let chartInstances = [];
-
-        // 上傳處理
-        const uploadArea = document.getElementById('uploadArea');
-        const fileInput = document.getElementById('fileInput');
-        
-        uploadArea.onclick = () => fileInput.click();
-        uploadArea.ondragover = (e) => { e.preventDefault(); uploadArea.style.background = '#f0f4ff'; };
-        uploadArea.ondragleave = () => { uploadArea.style.background = 'white'; };
-        uploadArea.ondrop = (e) => {
-            e.preventDefault();
-            uploadArea.style.background = 'white';
-            handleFiles(e.dataTransfer.files);
-        };
-        fileInput.onchange = (e) => handleFiles(e.target.files);
-
-        async function handleFiles(files) {
-            for (let file of files) {
-                if (file.name.match(/\.(xlsx|xls)$/)) {
-                    try {
-                        const data = await readExcel(file);
-                        uploadedFiles.push(file);
-                        filesData.push(data);
-                    } catch (error) {
-                        console.error('讀取檔案失敗:', error);
-                        alert(`讀取檔案 ${file.name} 失敗，請確認檔案格式是否正確`);
-                    }
-                }
-            }
-            displayFiles();
-            if (uploadedFiles.length >= 2) {
-                document.getElementById('configSection').style.display = 'block';
-                document.getElementById('outputSection').style.display = 'block';
-                updatePrimarySelector();
-                displayColumnsSelector();
-            }
-        }
-
-        function readExcel(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
-                        const ws = wb.Sheets[wb.SheetNames[0]];
-                        const data = XLSX.utils.sheet_to_json(ws);
-                        const columns = data.length > 0 ? Object.keys(data[0]) : [];
-                        resolve({ data, columns, sheetName: wb.SheetNames[0] });
-                    } catch (error) {
-                        reject(error);
-                    }
-                };
-                reader.onerror = reject;
-                reader.readAsArrayBuffer(file);
-            });
-        }
-
-        function displayFiles() {
-            const container = document.getElementById('uploadedFiles');
-            
-            container.innerHTML = uploadedFiles.map((file, i) => `
-                <div class="file-item">
-                    <div class="file-header">
-                        <div class="file-info">
-                            <div class="file-name">📄 ${file.name}</div>
-                            <div class="file-stats">${filesData[i].data.length} 筆 | ${filesData[i].columns.length} 欄位</div>
-                        </div>
-                        <button class="btn btn-remove" onclick="removeFile(${i})">移除</button>
-                    </div>
-
-                    <div class="file-config">
-                        <div class="form-group">
-                            <label>檔案標籤</label>
-                            <input type="text" id="label_${i}" placeholder="檔案 ${i + 1}" value="檔案 ${i + 1}">
-                            <div class="helper-text">用於識別檔案的自訂名稱</div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label>Key 欄位（可複選）</label>
-                            <div class="key-selector" id="keySelector_${i}">
-                                ${filesData[i].columns.map(col => `
-                                    <div class="key-item" onclick="toggleKeyCheckbox(${i}, '${col.replace(/'/g, "\\'")}')">
-                                        <input type="checkbox" id="key_${i}_${col}" value="${col}" onclick="event.stopPropagation()">
-                                        <label for="key_${i}_${col}">${col}</label>
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <div class="helper-text">選擇用於比對的關鍵欄位，可選擇多個欄位組成複合 Key</div>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function toggleKeyCheckbox(fileIndex, colName) {
-            const checkbox = document.getElementById(`key_${fileIndex}_${colName}`);
-            checkbox.checked = !checkbox.checked;
-        }
-
-        function removeFile(index) {
-            uploadedFiles.splice(index, 1);
-            filesData.splice(index, 1);
-            displayFiles();
-            if (uploadedFiles.length < 2) {
-                document.getElementById('configSection').style.display = 'none';
-                document.getElementById('outputSection').style.display = 'none';
-                document.getElementById('resultSection').style.display = 'none';
-            } else {
-                updatePrimarySelector();
-                displayColumnsSelector();
-            }
-        }
-
-        function selectMode(radio) {
-            document.querySelectorAll('.mode-option').forEach(opt => opt.classList.remove('selected'));
-            radio.parentElement.classList.add('selected');
-            
-            const primarySelector = document.getElementById('primarySelector');
-            if (radio.value === 'primary') {
-                primarySelector.classList.add('show');
-            } else {
-                primarySelector.classList.remove('show');
-            }
-        }
-
-        function updatePrimarySelector() {
-            const select = document.getElementById('primaryFile');
-            select.innerHTML = uploadedFiles.map((file, i) => {
-                const label = document.getElementById(`label_${i}`)?.value || `檔案 ${i + 1}`;
-                return `<option value="${i}">${label}</option>`;
-            }).join('');
-        }
-
-        function displayColumnsSelector() {
-            const container = document.getElementById('columnsContainer');
-            
-            let html = '';
-            uploadedFiles.forEach((file, fileIndex) => {
-                const label = document.getElementById(`label_${fileIndex}`)?.value || `檔案 ${fileIndex + 1}`;
-                
-                html += `
-                    <div class="file-columns-group">
-                        <div class="file-columns-title">${label} - ${file.name}</div>
-                        <div class="columns-grid">
-                            ${filesData[fileIndex].columns.map(col => `
-                                <div class="column-item" onclick="toggleColumnCheckbox(${fileIndex}, '${col.replace(/'/g, "\\'")}')">
-                                    <input type="checkbox" id="col_${fileIndex}_${col}" value="${col}" checked onclick="event.stopPropagation()">
-                                    <label for="col_${fileIndex}_${col}">${col}</label>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-            });
-            
-            container.innerHTML = html;
-        }
-
-        function toggleColumnCheckbox(fileIndex, colName) {
-            const checkbox = document.getElementById(`col_${fileIndex}_${colName}`);
-            checkbox.checked = !checkbox.checked;
-        }
-
-        function selectAllColumns() {
-            document.querySelectorAll('#columnsContainer input[type="checkbox"]').forEach(cb => {
-                cb.checked = true;
-            });
-        }
-
-        function deselectAllColumns() {
-            document.querySelectorAll('#columnsContainer input[type="checkbox"]').forEach(cb => {
-                cb.checked = false;
-            });
-        }
-
-        function clearAll() {
-            if (confirm('確定要清除所有資料並重新開始嗎？')) {
-                uploadedFiles = [];
-                filesData = [];
-                analysisResults = null;
-                
-                chartInstances.forEach(chart => chart.destroy());
-                chartInstances = [];
-                
-                document.getElementById('uploadedFiles').innerHTML = '';
-                document.getElementById('configSection').style.display = 'none';
-                document.getElementById('outputSection').style.display = 'none';
-                document.getElementById('resultSection').style.display = 'none';
-                
-                fileInput.value = '';
-            }
-        }
-
-        function performAnalysis() {
-            const config = [];
-            for (let i = 0; i < uploadedFiles.length; i++) {
-                const label = document.getElementById(`label_${i}`).value || `檔案 ${i + 1}`;
-                
-                const keys = [];
-                filesData[i].columns.forEach(col => {
-                    const checkbox = document.getElementById(`key_${i}_${col}`);
-                    if (checkbox && checkbox.checked) {
-                        keys.push(col);
-                    }
-                });
-                
-                if (keys.length === 0) {
-                    alert(`請為「${label}」至少選擇一個 Key 欄位`);
-                    return;
-                }
-
-                const outputColumns = [];
-                filesData[i].columns.forEach(col => {
-                    const checkbox = document.getElementById(`col_${i}_${col}`);
-                    if (checkbox && checkbox.checked) {
-                        outputColumns.push(col);
-                    }
-                });
-
-                config.push({ label, keys, outputColumns });
-            }
-
-            const mode = document.querySelector('input[name="mode"]:checked').value;
-            const primaryIndex = mode === 'primary' ? parseInt(document.getElementById('primaryFile').value) : null;
-
-            const allKeysMap = new Map();
-            filesData.forEach((fileData, fileIndex) => {
-                fileData.data.forEach(row => {
-                    const keyValues = config[fileIndex].keys.map(k => String(row[k] || '').trim());
-                    const compositeKey = keyValues.join('|');
-                    
-                    if (compositeKey && !keyValues.every(v => v === '')) {
-                        if (!allKeysMap.has(compositeKey)) {
-                            allKeysMap.set(compositeKey, { keyValues, fileIndices: [] });
-                        }
-                        allKeysMap.get(compositeKey).fileIndices.push(fileIndex);
-                    }
-                });
-            });
-
-            let targetKeys = [];
-            if (mode === 'union') {
-                targetKeys = Array.from(allKeysMap.keys());
-            } else if (mode === 'intersection') {
-                allKeysMap.forEach((value, key) => {
-                    const uniqueIndices = [...new Set(value.fileIndices)];
-                    if (uniqueIndices.length === uploadedFiles.length) {
-                        targetKeys.push(key);
-                    }
-                });
-            } else if (mode === 'primary') {
-                filesData[primaryIndex].data.forEach(row => {
-                    const keyValues = config[primaryIndex].keys.map(k => String(row[k] || '').trim());
-                    const compositeKey = keyValues.join('|');
-                    if (compositeKey && !keyValues.every(v => v === '') && !targetKeys.includes(compositeKey)) {
-                        targetKeys.push(compositeKey);
-                    }
-                });
-            }
-
-            const results = [];
-            targetKeys.forEach(compositeKey => {
-                const keyInfo = allKeysMap.get(compositeKey);
-                
-                const rowData = filesData.map((fileData, i) => {
-                    return fileData.data.find(r => {
-                        const keyValues = config[i].keys.map(k => String(r[k] || '').trim());
-                        return keyValues.join('|') === compositeKey;
-                    }) || null;
-                });
-
-                const existCount = rowData.filter(r => r !== null).length;
-                let category;
-
-                if (existCount === filesData.length) {
-                    category = 'match';
-                } else if (existCount === 1) {
-                    const onlyInIndex = rowData.findIndex(r => r !== null);
-                    category = `only_${onlyInIndex}`;
-                } else {
-                    category = 'partial';
-                }
-
-                results.push({ 
-                    compositeKey, 
-                    keyValues: keyInfo.keyValues,
-                    rowData, 
-                    category, 
-                    existCount 
-                });
-            });
-
-            analysisResults = { results, config, mode, primaryIndex };
-            displayResults();
-        }
-
-        function displayResults() {
-            const { results, config } = analysisResults;
-
-            const stats = {
-                total: results.length,
-                match: results.filter(r => r.category === 'match').length,
-                partial: results.filter(r => r.category === 'partial').length
-            };
-
-            uploadedFiles.forEach((_, i) => {
-                stats[`only_${i}`] = results.filter(r => r.category === `only_${i}`).length;
-            });
-
-            const statsGrid = document.getElementById('statsGrid');
-            let statsHtml = `
-                <div class="stat-card">
-                    <div class="stat-number">${stats.total}</div>
-                    <div class="stat-label">總筆數</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number" style="color: #4ade80;">${stats.match}</div>
-                    <div class="stat-label">完全相符</div>
-                </div>
-            `;
-
-            uploadedFiles.forEach((_, i) => {
-                const count = stats[`only_${i}`] || 0;
-                if (count > 0) {
-                    statsHtml += `
-                        <div class="stat-card">
-                            <div class="stat-number" style="color: #fb923c;">${count}</div>
-                            <div class="stat-label">僅${config[i].label}</div>
-                        </div>
-                    `;
-                }
-            });
-
-            if (stats.partial > 0) {
-                statsHtml += `
-                    <div class="stat-card">
-                        <div class="stat-number" style="color: #60a5fa;">${stats.partial}</div>
-                        <div class="stat-label">部分缺失</div>
-                    </div>
-                `;
-            }
-
-            statsGrid.innerHTML = statsHtml;
-
-            const summaryBox = document.getElementById('summaryBox');
-            const matchRate = stats.total > 0 ? ((stats.match / stats.total) * 100).toFixed(1) : 0;
-            
-            let summaryHtml = `
-                <div class="summary-item">
-                    <span class="summary-label">相符率</span>
-                    <span class="summary-value">${matchRate}%</span>
-                </div>
-            `;
-
-            uploadedFiles.forEach((file, i) => {
-                const count = results.filter(r => r.rowData[i] !== null).length;
-                const coverage = stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : 0;
-                summaryHtml += `
-                    <div class="summary-item">
-                        <span class="summary-label">${config[i].label} 覆蓋率</span>
-                        <span class="summary-value">${coverage}%</span>
-                    </div>
-                `;
-            });
-
-            summaryBox.innerHTML = summaryHtml;
-
-            drawCharts(stats, config, results);
-            generateTabs(stats, config);
-
-            document.getElementById('resultSection').style.display = 'block';
-            document.getElementById('resultSection').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function drawCharts(stats, config, results) {
-            chartInstances.forEach(chart => chart.destroy());
-            chartInstances = [];
-
-            if (typeof Chart === 'undefined') {
-                console.warn('Chart.js 未載入，跳過圖表繪製');
-                return;
-            }
-
-            const ctx1 = document.getElementById('pieChart').getContext('2d');
-            const labels = [];
-            const data = [];
-            const colors = [];
-
-            if (stats.match > 0) {
-                labels.push('完全相符');
-                data.push(stats.match);
-                colors.push('#4ade80');
-            }
-
-            uploadedFiles.forEach((_, i) => {
-                const count = stats[`only_${i}`] || 0;
-                if (count > 0) {
-                    labels.push(`僅${config[i].label}`);
-                    data.push(count);
-                    colors.push(['#ef4444', '#fb923c', '#60a5fa', '#a78bfa'][i % 4]);
-                }
-            });
-
-            if (stats.partial > 0) {
-                labels.push('部分缺失');
-                data.push(stats.partial);
-                colors.push('#94a3b8');
-            }
-
-            const pieChart = new Chart(ctx1, {
-                type: 'pie',
-                data: { labels, datasets: [{ data, backgroundColor: colors }] },
-                options: { responsive: true, maintainAspectRatio: true }
-            });
-            chartInstances.push(pieChart);
-
-            const ctx2 = document.getElementById('barChart').getContext('2d');
-            const coverage = uploadedFiles.map((_, i) => {
-                const count = results.filter(r => r.rowData[i] !== null).length;
-                return stats.total > 0 ? ((count / stats.total) * 100).toFixed(1) : 0;
-            });
-
-            const barChart = new Chart(ctx2, {
-                type: 'bar',
-                data: {
-                    labels: config.map(c => c.label),
-                    datasets: [{
-                        label: '覆蓋率 (%)',
-                        data: coverage,
-                        backgroundColor: '#667eea'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    scales: { y: { beginAtZero: true, max: 100 } }
-                }
-            });
-            chartInstances.push(barChart);
-        }
-
-        function generateTabs(stats, config) {
-            const tabs = document.getElementById('tabs');
-            
-            let tabsHtml = `
-                <button class="tab active" onclick="switchTab('all', event)">
-                    全部 <span class="tab-badge">${stats.total}</span>
-                </button>
-            `;
-
-            if (stats.match > 0) {
-                tabsHtml += `
-                    <button class="tab" onclick="switchTab('match', event)">
-                        完全相符 <span class="tab-badge">${stats.match}</span>
-                    </button>
-                `;
-            }
-
-            uploadedFiles.forEach((_, i) => {
-                const count = stats[`only_${i}`] || 0;
-                if (count > 0) {
-                    tabsHtml += `
-                        <button class="tab" onclick="switchTab('only_${i}', event)">
-                            僅${config[i].label} <span class="tab-badge">${count}</span>
-                        </button>
-                    `;
-                }
-            });
-
-            if (stats.partial > 0) {
-                tabsHtml += `
-                    <button class="tab" onclick="switchTab('partial', event)">
-                        部分缺失 <span class="tab-badge">${stats.partial}</span>
-                    </button>
-                `;
-            }
-
-            tabs.innerHTML = tabsHtml;
-            switchTab('all');
-        }
-
-        function switchTab(categoryId, event) {
-            if (event) {
-                document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-                event.currentTarget.classList.add('active');
-            }
-
-            const { results, config } = analysisResults;
-            const filtered = categoryId === 'all' ? results : results.filter(r => r.category === categoryId);
-
-            const content = document.getElementById('tabContent');
-            
-            if (filtered.length === 0) {
-                content.innerHTML = '<p style="text-align: center; padding: 40px; color: #999;">無資料</p>';
-                return;
-            }
-
-            let tableHtml = '<table class="data-table"><thead><tr>';
-            
-            const maxKeyCount = Math.max(...config.map(c => c.keys.length));
-            for (let i = 0; i < maxKeyCount; i++) {
-                tableHtml += `<th>Key ${i + 1}</th>`;
-            }
-            
-            config.forEach((cfg, fileIndex) => {
-                cfg.outputColumns.forEach(col => {
-                    tableHtml += `<th>${cfg.label}_${col}</th>`;
-                });
-            });
-
-            tableHtml += '</tr></thead><tbody>';
-
-            filtered.forEach(row => {
-                const rowClass = row.category.startsWith('only_') ? 'highlight-warning' : '';
-                tableHtml += `<tr class="${rowClass}">`;
-                
-                for (let i = 0; i < maxKeyCount; i++) {
-                    const keyValue = row.keyValues[i] || '-';
-                    tableHtml += `<td><strong>${keyValue}</strong></td>`;
-                }
-                
-                config.forEach((cfg, fileIndex) => {
-                    cfg.outputColumns.forEach(col => {
-                        const data = row.rowData[fileIndex];
-                        const value = data && data[col] !== undefined ? data[col] : '-';
-                        tableHtml += `<td>${value}</td>`;
-                    });
-                });
-
-                tableHtml += '</tr>';
-            });
-
-            tableHtml += '</tbody></table>';
-            content.innerHTML = tableHtml;
-        }
-
-        function exportResults() {
-            if (!analysisResults) return;
-
-            const { results, config } = analysisResults;
-            const wb = XLSX.utils.book_new();
-
-            const summary = [
-                ['資料比對報告'],
-                ['產生時間', new Date().toLocaleString('zh-TW')],
-                [''],
-                ['檔案資訊']
-            ];
-
-            config.forEach((cfg, i) => {
-                summary.push([`檔案 ${i + 1}`, cfg.label, uploadedFiles[i].name]);
-                summary.push(['Key 欄位', cfg.keys.join(', ')]);
-            });
-
-            summary.push([''], ['統計'], ['總筆數', results.length]);
-
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(summary), '摘要');
-
-            const detailData = results.map(row => {
-                const obj = {};
-                
-                row.keyValues.forEach((keyVal, i) => {
-                    obj[`Key_${i + 1}`] = keyVal;
-                });
-                
-                config.forEach((cfg, fileIndex) => {
-                    cfg.outputColumns.forEach(col => {
-                        const data = row.rowData[fileIndex];
-                        obj[`${cfg.label}_${col}`] = data && data[col] !== undefined ? data[col] : '';
-                    });
-                });
-                
-                return obj;
-            });
-
-            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(detailData), '詳細資料');
-
-            XLSX.writeFile(wb, `比對報告_${new Date().toISOString().slice(0, 10)}.xlsx`);
-        }
-    </script>
+<div class="container">
+<div class="header">
+<h1>📊 Excel 資料比對工具</h1>
+<p>專業的多檔案資料勾稽比對系統</p>
+</div>
+<div class="content">
+<div class="section">
+<div class="section-title"><span class="step-number">1</span>上傳檔案</div>
+<div class="upload-area" id="uploadArea">
+<div style="font-size:48px;color:#667eea;margin-bottom:15px;">📁</div>
+<h3>點擊或拖曳檔案到此處</h3>
+<p style="color:#666;margin-top:10px;">支援 .xlsx 和 .xls 格式</p>
+</div>
+<div class="upload-hint"><strong>💡 友善提醒：</strong>主要檔案請第一順位上傳，有助於後續設定和比對。</div>
+<div id="uploadedFiles" style="margin-top:20px;"></div>
+</div>
+<div class="section" id="configSection" style="display:none;">
+<div class="section-title"><span class="step-number">2</span>比對設定</div>
+<div style="background:white;border-radius:8px;padding:20px;">
+<div style="font-size:14px;font-weight:600;margin-bottom:15px;">比對模式</div>
+<label class="mode-option selected"><input type="radio" name="mode" value="union" checked onchange="selectMode(this)"><div><div>聯集</div><div style="font-size:12px;color:#666;">顯示所有檔案中出現的 Key</div></div></label>
+<label class="mode-option"><input type="radio" name="mode" value="intersection" onchange="selectMode(this)"><div><div>交集</div><div style="font-size:12px;color:#666;">僅顯示所有檔案共同的 Key</div></div></label>
+<label class="mode-option"><input type="radio" name="mode" value="primary" onchange="selectMode(this)"><div><div>指定主檔</div><div style="font-size:12px;color:#666;">以某一檔案為基準進行比對</div></div></label>
+<div id="primarySelector" style="margin-top:15px;display:none;"><label style="font-weight:600;font-size:13px;">請選擇主檔案（Key 欄位名稱以此為主）</label><select id="primaryFile" style="width:100%;padding:10px;margin-top:8px;"></select></div>
+</div>
+</div>
+<div class="section" id="outputSection" style="display:none;">
+<div class="section-title"><span class="step-number">3</span>產出新 Excel 的欄位</div>
+<div class="columns-section">
+<div style="font-size:14px;font-weight:600;margin-bottom:15px;">選擇要包含在結果中的欄位</div>
+<div id="columnsContainer"></div>
+</div>
+<button class="btn btn-primary" onclick="performAnalysis()">開始比對</button>
+<button class="btn btn-clear" onclick="clearAll()">🔄 清除，比較下一筆</button>
+</div>
+<div id="resultSection" style="display:none;">
+<div style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;border-radius:12px;padding:30px;margin-bottom:30px;">
+<div style="font-size:22px;font-weight:700;margin-bottom:20px;text-align:center;border-bottom:2px solid rgba(255,255,255,0.3);padding-bottom:15px;">比對結果</div>
+<div id="statsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;margin-bottom:25px;"></div>
+<div id="summaryBox" style="background:rgba(255,255,255,0.15);border-radius:10px;padding:20px;"></div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:20px;margin-bottom:30px;">
+<div style="background:white;border-radius:10px;padding:20px;"><div style="font-size:16px;font-weight:600;text-align:center;margin-bottom:15px;">資料分布</div><canvas id="pieChart"></canvas></div>
+<div style="background:white;border-radius:10px;padding:20px;"><div style="font-size:16px;font-weight:600;text-align:center;margin-bottom:15px;">檔案覆蓋率</div><canvas id="barChart"></canvas></div>
+</div>
+<div class="section">
+<div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+<div class="section-title" style="margin:0;">詳細資料</div>
+<button class="btn btn-export" onclick="exportResults()">匯出 Excel</button>
+</div>
+<div id="tabs" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;"></div>
+<div id="tabContent" style="max-height:500px;overflow-y:auto;"></div>
+</div>
+</div>
+</div>
+<div class="footer">Excel 資料比對工具 v1.0 | 所有資料處理均在本地瀏覽器進行，不會上傳至伺服器</div>
+</div>
+
+<script>
+// 你的完整 JS 程式碼（已整合優化）
+let uploadedFiles=[],filesData=[],analysisResults=null,chartInstances=[];
+const uploadArea=document.getElementById('uploadArea'),fileInput=document.createElement('input');
+fileInput.type='file';fileInput.accept='.xlsx,.xls';fileInput.multiple=true;fileInput.style.display='none';document.body.appendChild(fileInput);
+uploadArea.onclick=()=>fileInput.click();
+uploadArea.ondragover=e=>{e.preventDefault();uploadArea.style.background='#f0f4ff';};
+uploadArea.ondragleave=()=>{uploadArea.style.background='white';};
+uploadArea.ondrop=e=>{e.preventDefault();uploadArea.style.background='white';handleFiles(e.dataTransfer.files);};
+fileInput.onchange=e=>handleFiles(e.target.files);
+
+async function handleFiles(files){
+for(let file of files){
+if(file.name.match(/\.(xlsx|xls)$/)){
+if(file.size>50*1024*1024){alert(`${file.name} 超過50MB，建議分割`);continue;}
+try{const allSheets=await readExcelAllSheets(file);uploadedFiles.push(file);filesData.push(allSheets);}catch(error){alert(`讀取 ${file.name} 失敗`);}}
+}
+displayFiles();
+if(uploadedFiles.length>=2){document.getElementById('configSection').style.display='block';document.getElementById('outputSection').style.display='block';updatePrimarySelector();displayColumnsSelector();}
+}
+
+function readExcelAllSheets(file){
+return new Promise((resolve,reject)=>{
+const reader=new FileReader();
+reader.onload=e=>{
+try{
+const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+const allSheets=wb.SheetNames.map(sheetName=>{
+const ws=wb.Sheets[sheetName];
+const data=XLSX.utils.sheet_to_json(ws);
+const columns=data.length>0?Object.keys(data[0]):[];
+return{sheetName,data,columns};
+});
+resolve({fileName:file.name,sheets:allSheets,selectedSheetIndex:0});
+}catch(error){reject(error);}};
+reader.onerror=reject;
+reader.readAsArrayBuffer(file);
+});
+}
+
+function displayFiles(){
+const container=document.getElementById('uploadedFiles');
+container.innerHTML=uploadedFiles.map((file,i)=>{
+const fileData=filesData[i];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+const fileLabel=`${fileData.fileName.replace(/\.(xlsx|xls)$/i,'')}_${selectedSheet.sheetName}`;
+return`<div class="file-item"><div class="file-header"><div style="flex:1;"><div class="file-name">📄 ${file.name}</div><div class="file-stats">${selectedSheet.data.length} 筆 | ${selectedSheet.columns.length} 欄位</div></div><button class="btn btn-remove" onclick="removeFile(${i})">移除</button></div><div class="file-config">${fileData.sheets.length>1?`<div class="form-group"><label>選擇工作表</label><select id="sheet_${i}" onchange="changeSheet(${i},this.value)">${fileData.sheets.map((s,idx)=>`<option value="${idx}" ${idx===fileData.selectedSheetIndex?'selected':''}>${s.sheetName} (${s.data.length} 筆)</option>`).join('')}</select><div class="helper-text">此檔案有 ${fileData.sheets.length} 個工作表</div></div>`:''}<div class="form-group"><label>檔案標籤</label><input type="text" id="label_${i}" value="${fileLabel}" readonly style="background:#f8f9fa;"><div class="helper-text">格式：檔案名稱_工作表名稱</div></div><div class="form-group"><label>Key 欄位（可複選）</label><div class="key-selector">${selectedSheet.columns.map(col=>`<div class="key-item" onclick="toggleKeyCheckbox(${i},'${col.replace(/'/g,"\\'")}')"><input type="checkbox" id="key_${i}_${col}" value="${col}" onclick="event.stopPropagation();validateKeys(${i})"><label for="key_${i}_${col}">${col}</label></div>`).join('')}</div><div class="helper-text">選擇用於比對的關鍵欄位</div><div id="keyValidation_${i}"></div><div id="keyDisplay_${i}"></div></div></div></div>`;
+}).join('');
+}
+
+function changeSheet(fileIndex,sheetIndex){
+filesData[fileIndex].selectedSheetIndex=parseInt(sheetIndex);
+displayFiles();
+updatePrimarySelector();
+displayColumnsSelector();
+}
+
+function toggleKeyCheckbox(fileIndex,colName){
+const cb=document.getElementById(`key_${fileIndex}_${colName}`);
+cb.checked=!cb.checked;
+validateKeys(fileIndex);
+}
+
+function validateKeys(fileIndex){
+const fileData=filesData[fileIndex];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+const validationDiv=document.getElementById(`keyValidation_${fileIndex}`);
+const displayDiv=document.getElementById(`keyDisplay_${fileIndex}`);
+const selectedKeys=[];
+
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`key_${fileIndex}_${col}`);
+if(cb&&cb.checked)selectedKeys.push(col);
+});
+
+if(selectedKeys.length===0){
+validationDiv.innerHTML='';
+displayDiv.innerHTML='';
+displayColumnsSelector();
+return;
+}
+
+displayDiv.innerHTML=`<div class="key-display"><strong>比對鍵值：</strong>${selectedKeys.join(' + ')}</div>`;
+
+const keyValues=new Set();
+let hasDuplicate=false;
+
+selectedSheet.data.forEach(row=>{
+const compositeKey=selectedKeys.map(k=>String(row[k]||'')).join('|');
+if(keyValues.has(compositeKey))hasDuplicate=true;
+keyValues.add(compositeKey);
+});
+
+const uniqueCount=keyValues.size;
+const totalCount=selectedSheet.data.length;
+
+validationDiv.innerHTML=hasDuplicate?
+`<div class="key-validation error">⚠️ 警告：Key 組合有重複！唯一：${uniqueCount} / 總：${totalCount}</div>`:
+`<div class="key-validation success">✓ Key 唯一（${uniqueCount} 筆）</div>`;
+
+displayColumnsSelector();
+}
+
+function removeFile(index){
+uploadedFiles.splice(index,1);
+filesData.splice(index,1);
+displayFiles();
+if(uploadedFiles.length<2){
+document.getElementById('configSection').style.display='none';
+document.getElementById('outputSection').style.display='none';
+document.getElementById('resultSection').style.display='none';
+}else{
+updatePrimarySelector();
+displayColumnsSelector();
+}
+}
+
+function selectMode(radio){
+document.querySelectorAll('.mode-option').forEach(opt=>opt.classList.remove('selected'));
+radio.parentElement.classList.add('selected');
+document.getElementById('primarySelector').style.display=radio.value==='primary'?'block':'none';
+}
+
+function updatePrimarySelector(){
+const select=document.getElementById('primaryFile');
+select.innerHTML=uploadedFiles.map((f,i)=>{
+const label=document.getElementById(`label_${i}`)?.value||`檔案 ${i+1}`;
+return`<option value="${i}">${label}</option>`;
+}).join('');
+}
+
+function displayColumnsSelector(){
+const container=document.getElementById('columnsContainer');
+let html='';
+
+uploadedFiles.forEach((file,fileIndex)=>{
+const fileData=filesData[fileIndex];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+const label=document.getElementById(`label_${fileIndex}`)?.value||`檔案 ${fileIndex+1}`;
+const selectedKeys=new Set();
+
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`key_${fileIndex}_${col}`);
+if(cb&&cb.checked)selectedKeys.add(col);
+});
+
+html+=`<div class="file-columns-group">
+<div class="file-columns-header">
+<div class="file-columns-title">${label}</div>
+<div style="display:flex;gap:10px;">
+<button class="btn btn-small" style="background:#28a745;color:white;" onclick="selectFileColumns(${fileIndex})">全選</button>
+<button class="btn btn-small" style="background:#6c757d;color:white;" onclick="deselectFileColumns(${fileIndex})">取消全選</button>
+</div>
+</div>
+<div class="columns-grid">
+${selectedSheet.columns.map(col=>{
+const isKey=selectedKeys.has(col);
+return`<div class="column-item ${isKey?'is-key':''}" onclick="${isKey?'':`toggleColumnCheckbox(${fileIndex},'${col.replace(/'/g,"\\'")}')`}">
+<input type="checkbox" id="col_${fileIndex}_${col}" value="${col}" ${isKey?'disabled':'checked'} onclick="event.stopPropagation()">
+<label>${col}</label>
+</div>`;
+}).join('')}
+</div>
+</div>`;
+});
+
+container.innerHTML=html;
+}
+
+function toggleColumnCheckbox(fileIndex,colName){
+const cb=document.getElementById(`col_${fileIndex}_${colName}`);
+if(!cb.disabled)cb.checked=!cb.checked;
+}
+
+function selectFileColumns(fileIndex){
+const fileData=filesData[fileIndex];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`col_${fileIndex}_${col}`);
+if(cb&&!cb.disabled)cb.checked=true;
+});
+}
+
+function deselectFileColumns(fileIndex){
+const fileData=filesData[fileIndex];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`col_${fileIndex}_${col}`);
+if(cb&&!cb.disabled)cb.checked=false;
+});
+}
+
+function clearAll(){
+if(confirm('確定清除所有資料並重新開始？')){
+uploadedFiles=[];filesData=[];analysisResults=null;
+chartInstances.forEach(c=>c.destroy());chartInstances=[];
+document.getElementById('uploadedFiles').innerHTML='';
+document.getElementById('configSection').style.display='none';
+document.getElementById('outputSection').style.display='none';
+document.getElementById('resultSection').style.display='none';
+fileInput.value='';
+}
+}
+
+function performAnalysis(){
+const config=[];
+const mode=document.querySelector('input[name="mode"]:checked').value;
+let keyDisplayFileIndex=0;
+
+if(mode==='primary'){
+keyDisplayFileIndex=parseInt(document.getElementById('primaryFile').value);
+if(isNaN(keyDisplayFileIndex)||keyDisplayFileIndex<0||keyDisplayFileIndex>=uploadedFiles.length){
+alert("請選擇有效的主檔案");return;
+}
+}
+
+for(let i=0;i<uploadedFiles.length;i++){
+const fileData=filesData[i];
+const selectedSheet=fileData.sheets[fileData.selectedSheetIndex];
+const label=document.getElementById(`label_${i}`).value.trim()||`檔案${i+1}`;
+const keys=[];
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`key_${i}_${col}`);
+if(cb&&cb.checked)keys.push(col);
+});
+if(keys.length===0){alert(`請為「${label}」至少選一個 Key`);return;}
+
+const outputColumns=[];
+selectedSheet.columns.forEach(col=>{
+const cb=document.getElementById(`col_${i}_${col}`);
+if(cb&&cb.checked&&!cb.disabled)outputColumns.push(col);
+});
+
+config.push({label,keys,outputColumns,data:selectedSheet.data,columns:selectedSheet.columns});
+}
+
+const allKeysMap=new Map();
+config.forEach((cfg,fileIndex)=>{
+cfg.data.forEach(row=>{
+const keyValues=cfg.keys.map(k=>String(row[k]||'').trim());
+const compositeKey=keyValues.join('|');
+if(compositeKey&&!keyValues.every(v=>v==='')){
+if(!allKeysMap.has(compositeKey))allKeysMap.set(compositeKey,{keyValues,fileIndices:[]});
+allKeysMap.get(compositeKey).fileIndices.push(fileIndex);
+}
+});
+});
+
+let targetKeys=[];
+if(mode==='union'){
+targetKeys=Array.from(allKeysMap.keys());
+}else if(mode==='intersection'){
+allKeysMap.forEach((v,key)=>{
+if([...new Set(v.fileIndices)].length===uploadedFiles.length)targetKeys.push(key);
+});
+}else if(mode==='primary'){
+config[keyDisplayFileIndex].data.forEach(row=>{
+const keyValues=config[keyDisplayFileIndex].keys.map(k=>String(row[k]||'').trim());
+const compositeKey=keyValues.join('|');
+if(compositeKey&&!keyValues.every(v=>v==='')&&!targetKeys.includes(compositeKey))targetKeys.push(compositeKey);
+});
+}
+
+const results=[];
+targetKeys.forEach(compositeKey=>{
+const keyInfo=allKeysMap.get(compositeKey);
+const rowData=config.map((cfg,i)=>cfg.data.find(r=>{
+const keyValues=cfg.keys.map(k=>String(r[k]||'').trim());
+return keyValues.join('|')===compositeKey;
+})||null);
+
+const existCount=rowData.filter(r=>r!==null).length;
+let category=existCount===uploadedFiles.length?'match':existCount===1?`only_${rowData.findIndex(r=>r!==null)}`:'partial';
+
+results.push({compositeKey,keyValues:keyInfo.keyValues,rowData,category,existCount});
+});
+
+analysisResults={results,config,mode,keyDisplayFileIndex};
+displayResults();
+}
+
+function displayResults(){
+const{results,config,keyDisplayFileIndex}=analysisResults;
+const stats={total:results.length,match:results.filter(r=>r.category==='match').length,partial:results.filter(r=>r.category==='partial').length};
+
+uploadedFiles.forEach((_,i)=>{stats[`only_${i}`]=results.filter(r=>r.category===`only_${i}`).length;});
+
+let statsHtml=`<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:20px;text-align:center;"><div style="font-size:32px;font-weight:700;margin-bottom:8px;">${stats.total}</div><div style="font-size:12px;opacity:0.9;">總筆數</div></div><div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:20px;text-align:center;"><div style="font-size:32px;font-weight:700;margin-bottom:8px;color:#4ade80;">${stats.match}</div><div style="font-size:12px;opacity:0.9;">完全相符</div></div>`;
+
+uploadedFiles.forEach((_,i)=>{
+const count=stats[`only_${i}`]||0;
+if(count>0)statsHtml+=`<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:20px;text-align:center;"><div style="font-size:32px;font-weight:700;margin-bottom:8px;color:#fb923c;">${count}</div><div style="font-size:12px;opacity:0.9;">僅${config[i].label}</div></div>`;
+});
+
+if(stats.partial>0)statsHtml+=`<div style="background:rgba(255,255,255,0.15);border-radius:10px;padding:20px;text-align:center;"><div style="font-size:32px;font-weight:700;margin-bottom:8px;color:#60a5fa;">${stats.partial}</div><div style="font-size:12px;opacity:0.9;">部分缺失</div></div>`;
+
+document.getElementById('statsGrid').innerHTML=statsHtml;
+
+const matchRate=stats.total>0?((stats.match/stats.total)*100).toFixed(1):0;
+let summaryHtml=`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1);"><span style="opacity:0.9;">相符率</span><span style="font-weight:600;">${matchRate}%</span></div>`;
+
+uploadedFiles.forEach((f,i)=>{
+const count=results.filter(r=>r.rowData[i]!==null).length;
+const coverage=stats.total>0?((count/stats.total)*100).toFixed(1):0;
+summaryHtml+=`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.1);"><span style="opacity:0.9;">${config[i].label} 覆蓋率</span><span style="font-weight:600;">${coverage}%</span></div>`;
+});
+
+document.getElementById('summaryBox').innerHTML=summaryHtml;
+drawCharts(stats,config,results);
+generateTabs(stats,config);
+document.getElementById('resultSection').style.display='block';
+document.getElementById('resultSection').scrollIntoView({behavior:'smooth'});
+}
+
+function drawCharts(stats,config,results){
+chartInstances.forEach(c=>c.destroy());chartInstances=[];
+if(typeof Chart==='undefined')return;
+
+const ctx1=document.getElementById('pieChart').getContext('2d');
+const labels=[],data=[],colors=[];
+
+if(stats.match>0){labels.push('完全相符');data.push(stats.match);colors.push('#4ade80');}
+uploadedFiles.forEach((_,i)=>{
+const count=stats[`only_${i}`]||0;
+if(count>0){labels.push(`僅${config[i].label}`);data.push(count);colors.push(['#ef4444','#fb923c','#60a5fa','#a78bfa'][i%4]);}
+});
+if(stats.partial>0){labels.push('部分缺失');data.push(stats.partial);colors.push('#94a3b8');}
+
+chartInstances.push(new Chart(ctx1,{type:'pie',data:{labels,datasets:[{data,backgroundColor:colors}]},options:{responsive:true,maintainAspectRatio:true}}));
+
+const ctx2=document.getElementById('barChart').getContext('2d');
+const coverage=uploadedFiles.map((_,i)=>{
+const count=results.filter(r=>r.rowData[i]!==null).length;
+return stats.total>0?((count/stats.total)*100).toFixed(1):0;
+});
+
+chartInstances.push(new Chart(ctx2,{type:'bar',data:{labels:config.map(c=>c.label),datasets:[{label:'覆蓋率 (%)',data:coverage,backgroundColor:'#667eea'}]},options:{responsive:true,maintainAspectRatio:true,scales:{y:{beginAtZero:true,max:100}}}}));
+}
+
+function generateTabs(stats,config){
+let tabsHtml=`<button style="padding:10px 18px;border:none;background:#667eea;color:white;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;" onclick="switchTab('all',event)">全部 <span style="background:rgba(255,255,255,0.3);padding:2px 8px;border-radius:10px;font-size:11px;">${stats.total}</span></button>`;
+
+if(stats.match>0)tabsHtml+=`<button style="padding:10px 18px;border:none;background:#e9ecef;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;" onclick="switchTab('match',event)">完全相符 <span style="background:rgba(255,255,255,0.3);padding:2px 8px;border-radius:10px;font-size:11px;">${stats.match}</span></button>`;
+
+uploadedFiles.forEach((_,i)=>{
+const count=stats[`only_${i}`]||0;
+if(count>0)tabsHtml+=`<button style="padding:10px 18px;border:none;background:#e9ecef;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;" onclick="switchTab('only_${i}',event)">僅${config[i].label} <span style="background:rgba(255,255,255,0.3);padding:2px 8px;border-radius:10px;font-size:11px;">${count}</span></button>`;
+});
+
+if(stats.partial>0)tabsHtml+=`<button style="padding:10px 18px;border:none;background:#e9ecef;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px;" onclick="switchTab('partial',event)">部分缺失 <span style="background:rgba(255,255,255,0.3);padding:2px 8px;border-radius:10px;font-size:11px;">${stats.partial}</span></button>`;
+
+document.getElementById('tabs').innerHTML=tabsHtml;
+switchTab('all');
+}
+
+function switchTab(categoryId,event){
+if(event){
+document.querySelectorAll('#tabs button').forEach(tab=>{tab.style.background='#e9ecef';tab.style.color='#333';});
+event.currentTarget.style.background='#667eea';
+event.currentTarget.style.color='white';
+}
+
+const{results,config,keyDisplayFileIndex}=analysisResults;
+const filtered=categoryId==='all'?results:results.filter(r=>r.category===categoryId);
+const content=document.getElementById('tabContent');
+
+if(filtered.length===0){
+content.innerHTML='<p style="text-align:center;padding:40px;color:#999;">無資料</p>';
+return;
+}
+
+let tableHtml='<table class="data-table"><thead><tr>';
+
+config[keyDisplayFileIndex].keys.forEach(keyName=>{
+tableHtml+=`<th>${keyName}</th>`;
+});
+
+config.forEach(cfg=>{
+cfg.outputColumns.forEach(col=>{
+tableHtml+=`<th>${cfg.label}_${col}</th>`;
+});
+});
+
+tableHtml+='</tr></thead><tbody>';
+
+filtered.forEach(r=>{
+let bg='#ffffff',c='#000000';
+if(r.category==='match'){bg='#e8f5e9';c='#1b5e20';}
+else if(r.category==='partial'){bg='#fff8e1';c='#8a6d3b';}
+else if(r.category.startsWith('only_')){
+const i=parseInt(r.category.split('_')[1])%5;
+const p=['#ffebee','#e3f2fd','#f3e5f5','#fff3e0','#e8f5e9'];
+const t=['#c62828','#1565c0','#6a1b9a','#ef6c00','#2e7d32'];
+bg=p[i];c=t[i];
+}
+
+tableHtml+=`<tr style="background:${bg}!important;color:${c};">`;
+
+config[keyDisplayFileIndex].keys.forEach((_,j)=>{
+tableHtml+=`<td><strong>${r.keyValues[j]||'-'}</strong></td>`;
+});
+
+config.forEach((cfg,fi)=>{
+cfg.outputColumns.forEach(col=>{
+tableHtml+=`<td>${r.rowData[fi]?.[col]??'-'}</td>`;
+});
+});
+
+tableHtml+='</tr>';
+});
+
+tableHtml+='</tbody></table>';
+content.innerHTML=tableHtml;
+}
+
+function exportResults(){
+if(!analysisResults)return;
+const{results,config,keyDisplayFileIndex}=analysisResults;
+const wb=XLSX.utils.book_new();
+const summary=[['資料比對報告'],['產生時間',new Date().toLocaleString('zh-TW')],[''],['檔案資訊']];
+
+config.forEach((cfg,i)=>{
+summary.push([`檔案 ${i+1}`,cfg.label,uploadedFiles[i].name]);
+summary.push(['Key 欄位',cfg.keys.join(' + ')]);
+});
+
+summary.push([''],['統計'],['總筆數',results.length]);
+XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(summary),'摘要');
+
+const detailData=results.map(row=>{
+const obj={};
+config[keyDisplayFileIndex].keys.forEach((keyName,idx)=>{
+obj[keyName]=row.keyValues[idx];
+});
+config.forEach(cfg=>{
+const fileIndex=config.indexOf(cfg);
+cfg.outputColumns.forEach(col=>{
+const data=row.rowData[fileIndex];
+obj[`${cfg.label}_${col}`]=data&&data[col]!==undefined?data[col]:'';
+});
+});
+return obj;
+});
+
+XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(detailData),'詳細資料');
+XLSX.writeFile(wb,`比對報告_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+</script>
 </body>
 </html>
